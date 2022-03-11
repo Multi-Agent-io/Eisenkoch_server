@@ -1,22 +1,33 @@
 #!/usr/bin/env python3
-import time
 import select
 import socket
 import logging
 from threading import Thread
+from queue import SimpleQueue
+import typing as tp
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s %(levelname)s: %(message)s",
 )
 
+ROBOT_COMMAND_QUEUE: SimpleQueue = SimpleQueue()
+
 
 class TCPServer(Thread):
-
-    def __init__(self, address: str, port: int):
+    def __init__(self, address: str, port: int) -> None:
         Thread.__init__(self)
-        self.cur_except_socket = None
-        self.cur_socket = None
+
+        # additional variables
+        self.readable: tp.Optional[tp.List[tp.Any]] = None
+        self.writable: tp.Optional[tp.List[tp.Any]] = None
+        self.exceptional: tp.Optional[tp.List[tp.Any]] = None
+        self.connection: tp.Optional[socket.socket] = None
+        self.client_address: tp.Optional[str] = None
+        self.cur_except_socket: socket.socket
+        self.cur_socket: socket.socket
+        self.command: tp.Optional[str] = None
+
         self.address: str = address
         self.port: int = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -24,16 +35,13 @@ class TCPServer(Thread):
         logging.info("starting up on %s port %s" % self.server_address)
         self.server.bind(self.server_address)
 
-        # waffles variables
-        self.cooking_time_left: int
-
         # set three lists containing communication channels to monitor.
         self.inputs: list = [self.server]
         self.outputs: list = [self.server]
         self.exceptions: list = [self.server]
 
     def run(self) -> None:
-
+        global ROBOT_COMMAND_QUEUE
         # Listen for incoming connections
         self.server.listen(3)
         try:
@@ -42,15 +50,16 @@ class TCPServer(Thread):
 
                 # Wait for at least one of the sockets to be ready for processing
                 logging.debug("waiting for the next event")
-                self.readable, self.writable, self.exceptional = select.select(self.inputs, self.outputs,
-                                                                               self.exceptions)
+                self.readable, self.writable, self.exceptional = select.select(
+                    self.inputs, self.outputs, self.exceptions
+                )
 
                 # Handle inputs
                 for self.cur_socket in self.readable:
                     if self.cur_socket is self.server:
                         # A "readable" server socket is ready to accept a connection
                         self.connection, self.client_address = self.cur_socket.accept()
-                        logging.debug(f"new connection from {self.client_address}")
+                        logging.info(f"new connection from {self.client_address}")
                         self.inputs.append(self.connection)
                         self.outputs.append(self.connection)
                         self.exceptions.append(self.connection)
@@ -59,20 +68,21 @@ class TCPServer(Thread):
                     else:
                         self.command = self.__readline(self.cur_socket)
                         if len(self.command) != 0:
-                            logging.info(self.command + '\n')
-                        if self.command == "GET main":
-                            self.cur_socket.send("main 1".encode())
-                            logging.info("done")
-                        if self.command == "time_left":
-                            logging.info("inside time_left")
-                            self.cooking_time_left = int((self.__readline(self.cur_socket)))
-                            logging.info(f"time is {self.cooking_time_left}")
-                        if self.command == "left_start":
-                            self.cooking_left(self.cooking_time_left)
+                            logging.debug(self.command + "\n")
+
+                            # part only for simulation -- NEED TO DELETE
+                            if self.command == "GET main":
+                                self.cur_socket.send("main 1".encode())
+                                logging.info("start robot command - main 1")
+
+                            else:
+                                ROBOT_COMMAND_QUEUE.put_nowait(self.command)
 
                 # Handle "exceptional conditions"
                 for self.cur_except_socket in self.exceptional:
-                    logging.error(f"handling exceptional condition for {self.cur_except_socket.getpeername()}")
+                    logging.error(
+                        f"handling exceptional condition for {self.cur_except_socket.getpeername()}"
+                    )
                     # Stop listening for input on the connection
                     self.inputs.remove(self.cur_except_socket)
                     if self.cur_except_socket in self.outputs:
@@ -89,12 +99,12 @@ class TCPServer(Thread):
             exit()
 
     @staticmethod
-    def __readline(s):
+    def __readline(s) -> str:
         """
-            function get bytes buffer and return string
-            :param s: socket connection
-            :return: string
-            """
+        function get bytes buffer and return string
+        :param s: socket connection
+        :return: string
+        """
         res = b""
         while 1:
             c = s.recv(1)
@@ -103,16 +113,7 @@ class TCPServer(Thread):
             res += c
             if c == b"\n":
                 break
-        return res.decode('ascii')[:-1]
-
-    @staticmethod
-    def cooking_left(cooking_time: int):
-        logging.info("start cooking left waffle")
-        while cooking_time != 0:
-            logging.info(f"current time is {cooking_time}")
-            cooking_time = cooking_time - 1
-            time.sleep(1)
-        logging.info("waffles ready")
+        return res.decode("ascii")[:-1]
 
 
 if __name__ == "__main__":

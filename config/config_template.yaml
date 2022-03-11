@@ -1,0 +1,5 @@
+# server address and port should be the same as on robot
+
+server:
+  address: ""
+  port:
