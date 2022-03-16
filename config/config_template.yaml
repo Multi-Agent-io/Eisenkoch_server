@@ -1,4 +1,7 @@
-# server address and port should be the same as on robot
+# config for server address and port
+# address - str. For example "192.168.55.1"
+# port - int. For example 50000
+# remember, that server and client should be in one local network
 
 server:
   address: ""
