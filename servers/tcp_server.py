@@ -19,13 +19,10 @@ class TCPServer(Thread):
         Thread.__init__(self)
 
         # additional variables
+
         self.readable: tp.Optional[tp.List[tp.Any]] = None
         self.writable: tp.Optional[tp.List[tp.Any]] = None
         self.exceptional: tp.Optional[tp.List[tp.Any]] = None
-        self.connection: tp.Optional[socket.socket] = None
-        self.client_address: tp.Optional[str] = None
-        self.cur_except_socket: socket.socket
-        self.cur_socket: socket.socket
         self.command: tp.Optional[str] = None
 
         self.address: str = address
@@ -55,41 +52,41 @@ class TCPServer(Thread):
                 )
 
                 # Handle inputs
-                for self.cur_socket in self.readable:
-                    if self.cur_socket is self.server:
+                for cur_socket in self.readable:
+                    if cur_socket is self.server:
                         # A "readable" server socket is ready to accept a connection
-                        self.connection, self.client_address = self.cur_socket.accept()
-                        logging.info(f"new connection from {self.client_address}")
-                        self.inputs.append(self.connection)
-                        self.outputs.append(self.connection)
-                        self.exceptions.append(self.connection)
+                        connection, client_address = cur_socket.accept()
+                        logging.info(f"new connection from {client_address}")
+                        self.inputs.append(connection)
+                        self.outputs.append(connection)
+                        self.exceptions.append(connection)
 
                     # The next case is an established connection with a client that has sent data.
                     else:
-                        self.command = self.__readline(self.cur_socket)
+                        self.command = self.__readline(cur_socket)
                         if len(self.command) != 0:
                             logging.debug(self.command + "\n")
 
                             # part only for simulation -- NEED TO DELETE
                             if self.command == "GET main":
-                                self.cur_socket.send("main 1".encode())
+                                cur_socket.send("main 1".encode())
                                 logging.info("start robot command - main 1")
 
                             else:
                                 ROBOT_COMMAND_QUEUE.put_nowait(self.command)
 
                 # Handle "exceptional conditions"
-                for self.cur_except_socket in self.exceptional:
+                for cur_except_socket in self.exceptional:
                     logging.error(
-                        f"handling exceptional condition for {self.cur_except_socket.getpeername()}"
+                        f"handling exceptional condition for {cur_except_socket.getpeername()}"
                     )
                     # Stop listening for input on the connection
-                    self.inputs.remove(self.cur_except_socket)
-                    if self.cur_except_socket in self.outputs:
-                        self.outputs.remove(self.cur_except_socket)
-                    if self.cur_except_socket in self.exceptions:
-                        self.exceptions.remove(self.cur_except_socket)
-                    self.cur_except_socket.close()
+                    self.inputs.remove(cur_except_socket)
+                    if cur_except_socket in self.outputs:
+                        self.outputs.remove(cur_except_socket)
+                    if cur_except_socket in self.exceptions:
+                        self.exceptions.remove(cur_except_socket)
+                    cur_except_socket.close()
 
         except KeyboardInterrupt:
             exit()
