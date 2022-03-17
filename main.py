@@ -9,7 +9,7 @@ from queue import Empty
 
 # modules
 from config import read_config
-from servers import TCPServer
+from servers import TCPServer, MyHttpsServer
 
 # global variables
 from servers import ROBOT_COMMAND_QUEUE
@@ -22,25 +22,16 @@ class MainClass:
         self.current_command: tp.Optional[str] = None
         self.robot_command: tp.Optional[str] = None
 
-        # waffles variables
-        self.cooking_time_left: int = 0
-        self.cooking_time_right: int = 0
-        self.total_waffles: int = 0
-
         self.config: tp.Dict[str, str] = read_config()
         logging.debug(self.config)
 
-        # available servers
-        self.servers: list = self.__start_servers()
-
-    def __start_servers(self) -> list:
-        self.s: list = []
+        # starting servers
         self.tcp = TCPServer(
             self.config["server"]["address"], int(self.config["server"]["port"])
         )
         self.tcp.start()
-        self.s.append(self.tcp)
-        return self.s
+        self.http = MyHttpsServer()
+        self.http.start()
 
     def __get_data(self, block: bool = False) -> tp.Optional[str]:
         try:
@@ -58,29 +49,45 @@ class MainClass:
                 if self.current_command:
                     if self.current_command == "time_left":
                         logging.info(f"get command {self.current_command}")
-                        self.cooking_time_left = int(self.__get_data(True))
-                        logging.info(f"left cooking time is {self.cooking_time_left}")
+                        cooking_time_left = int(self.__get_data(True))
+                        self.http.set_left_cooking_time(cooking_time_left)
+                        logging.info(f"left cooking time is {cooking_time_left}")
+
                     if self.current_command == "time_right":
                         logging.info(f"get command {self.current_command}")
-                        self.cooking_time_right = int(self.__get_data(True))
-                        logging.info(f"right cooking time is {self.cooking_time_right}")
+                        cooking_time_right = int(self.__get_data(True))
+                        self.http.set_right_cooking_time(cooking_time_right)
+                        logging.info(f"right cooking time is {cooking_time_right}")
+
                     if self.current_command == "total_waffles":
                         logging.info(f"get command {self.current_command}")
-                        self.total_waffles = int(self.__get_data(True))
-                        logging.info(f"total made waffles is {self.total_waffles}")
+                        total_waffles = int(self.__get_data(True))
+                        self.http.set_number_waffles(total_waffles)
+                        logging.info(f"total made waffles is {total_waffles}")
 
                     if self.current_command == "left_start":
                         logging.info(f"get command {self.current_command}")
-                        self.cooking_timer(self.cooking_time_left)
+                        self.http.set_status_left("busy")
+
                     if self.current_command == "right_start":
                         logging.info(f"get command {self.current_command}")
-                        self.cooking_timer(self.cooking_time_right)
+                        self.http.set_status_left("busy")
+
+                    if self.current_command == "left_stop":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_left("available")
+
+                    if self.current_command == "right_stop":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_left("available")
 
                 time.sleep(1)
         except KeyboardInterrupt:
             logging.debug("shutting down")
+            self.tcp.join()
+            self.http.join()
             exit()
-            
+
     @staticmethod
     def cooking_timer(cooking_time: int):
         logging.info("start cooking waffle")
