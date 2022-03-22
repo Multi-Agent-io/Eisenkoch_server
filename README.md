@@ -15,7 +15,7 @@ git clone https://github.com/Multi-Agent-io/Eisenkoch_server.git
 ```
 Go into the repository to ***config*** subdirectory and rename and fill in config file:
 ```shell
-cd Eisenkoch_server
+cd Eisenkoch_server/config
 mv config_template.yaml config.yaml 
 nano config.yaml
 ```
