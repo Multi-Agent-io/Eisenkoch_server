@@ -1,8 +1,16 @@
-# config for server address and port
-# address - str. For example "192.168.55.1"
+# config for server address and port:
+# address - str. For example "192.168.55.21"
 # port - int. For example 50000
+# seed - str . Secret seed to send money
 # remember, that server and client should be in one local network
+#information about Eisenkoch:
+# address - str. Public address of robot
+# cost - int. Price of one portion of waffles
 
 server:
   address: ""
   port:
+  seed: ""
+eisenkoch:
+  address: ""
+  cost:

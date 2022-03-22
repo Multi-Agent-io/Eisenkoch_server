@@ -6,6 +6,7 @@ import time
 import typing as tp
 import logging
 from queue import Empty
+import robonomicsinterface as RI
 
 # modules
 from config import read_config
@@ -19,25 +20,25 @@ class MainClass:
     """The main class that initialize servers and launches the loop."""
 
     def __init__(self) -> None:
-        self.current_command: tp.Optional[str] = None
-        self.robot_command: tp.Optional[str] = None
-
         self.config: tp.Dict[str, str] = read_config()
         logging.debug(self.config)
+
+        self.interface = RI.RobonomicsInterface(self.config["server"]["seed"])
+        self.current_command: tp.Optional[str] = None
 
         # starting servers
         self.tcp = TCPServer(
             self.config["server"]["address"], int(self.config["server"]["port"])
         )
         self.tcp.start()
-        self.http = MyHttpsServer()
+        self.http = MyHttpsServer(self.config["eisenkoch"]["address"])
         self.http.start()
 
     def __get_data(self, block: bool = False) -> tp.Optional[str]:
         try:
-            self.robot_command = ROBOT_COMMAND_QUEUE.get(block)
-            logging.debug(f"get command: {self.robot_command}")
-            return self.robot_command
+            robot_command = ROBOT_COMMAND_QUEUE.get(block)
+            logging.debug(f"get command: {robot_command}")
+            return robot_command
         except Empty:
             logging.debug("the queue is empty")
             return None
@@ -80,6 +81,16 @@ class MainClass:
                     if self.current_command == "right_stop":
                         logging.info(f"get command {self.current_command}")
                         self.http.set_status_left("available")
+
+                    if self.current_command == "send_tokens":
+                        logging.info(f"get command {self.current_command}")
+                        result = self.interface.send_tokens(self.config["eisenkoch"]["address"],
+                                                            int(self.config["eisenkoch"]["cost"]))
+                        logging.info(result)
+                        account_data = self.interface.account_info(self.config["eisenkoch"]["address"])
+                        new_balance = account_data["data"]["free"] - account_data["data"]["feeFrozen"]
+                        self.http.set_update_balance(new_balance)
+                        logging.info("update balance")
 
                 time.sleep(1)
         except KeyboardInterrupt:
