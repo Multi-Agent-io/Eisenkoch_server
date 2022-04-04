@@ -92,6 +92,22 @@ class MainClass:
                         self.http.set_update_balance(new_balance)
                         logging.info("update balance")
 
+                    if self.current_command == "left_timer_start":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_left("cooking")
+
+                    if self.current_command == "right_timer_start":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_right("cooking")
+
+                    if self.current_command == "left_timer_stop":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_left("finishing")
+
+                    if self.current_command == "right_timer_stop":
+                        logging.info(f"get command {self.current_command}")
+                        self.http.set_status_right("finishing")
+
                 time.sleep(1)
         except KeyboardInterrupt:
             logging.debug("shutting down")

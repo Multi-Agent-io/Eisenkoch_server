@@ -41,10 +41,6 @@ class MyHttpsServer(Thread):
         async def root() -> Dict[str, str]:
             return {"message": "Hello World"}
 
-        @self.app.get("/robot-address")
-        async def robot_address() -> Dict[str, str]:
-            return {"message": self.account_address}
-
         @self.app.get("/total-waffles", response_class=JSONResponse)
         def waffles_numbers() -> Dict[str, str]:
             if self.number_of_waffles is not None:
@@ -52,31 +48,17 @@ class MyHttpsServer(Thread):
             else:
                 return {"status": "waiting"}
 
-        @self.app.get("/cooking-time-left", response_class=JSONResponse)
-        def left_cooking() -> Dict[str, Union[str, int]]:
-            if self.cooking_time_left != 0:
-                return {"status": self.cooking_time_left}
-            else:
-                return {"status": "waiting"}
-
-        @self.app.get("/cooking-time-right", response_class=JSONResponse)
-        def right_cooking() -> Dict[str, Union[str, int]]:
-            if self.cooking_time_right != 0:
-                return {"status": self.cooking_time_right}
-            else:
-                return {"status": "waiting"}
-
-        @self.app.get("/status-left")
+        @self.app.get("/status-left", response_class=JSONResponse)
         async def status_left() -> Dict[str, str]:
-            return {"message": self.status_left}
+            return {"status": self.status_left, "baking-duration": self.cooking_time_left}
 
-        @self.app.get("/status-right")
+        @self.app.get("/status-right", response_class=JSONResponse)
         async def status_right() -> Dict[str, str]:
-            return {"message": self.status_right}
+            return {"status": self.status_right, "baking-duration": self.cooking_time_right}
 
-        @self.app.get("/update-balance")
+        @self.app.get("/update-balance", response_class=JSONResponse)
         async def update_balance() -> Dict[str, int]:
-            return {"message": self.address_balance}
+            return {"balance": str(self.address_balance)}
 
     def run(self) -> None:
         uvicorn.run(self.app, host="127.0.0.1", port=5000, log_level="debug")
