@@ -23,16 +23,19 @@ class MainClass:
         self.config: tp.Dict[str, str] = read_config()
         logging.debug(self.config)
 
-        self.interface = RI.RobonomicsInterface(self.config["server"]["seed"])
+        self.interface = RI.RobonomicsInterface(self.config["robonomics"]["seed"])
         self.current_command: tp.Optional[str] = None
 
         # starting servers
         self.tcp = TCPServer(
-            self.config["server"]["address"], int(self.config["server"]["port"])
+            self.config["tcp_server"]["address"], int(self.config["tcp_server"]["port"])
         )
         self.tcp.start()
         self.http = MyHttpsServer(self.config["eisenkoch"]["address"])
         self.http.start()
+        account_data = self.interface.account_info(self.config["eisenkoch"]["address"])
+        eisenkoch_balance = account_data["data"]["free"] - account_data["data"]["feeFrozen"]
+        self.http.set_update_balance(eisenkoch_balance)
 
     def __get_data(self, block: bool = False) -> tp.Optional[str]:
         try:

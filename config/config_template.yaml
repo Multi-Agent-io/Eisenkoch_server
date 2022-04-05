@@ -1,16 +1,18 @@
-# config for server address and port:
+# config for tcp_server address and port:
 # address - str. For example "192.168.55.21"
 # port - int. For example 50000
-# seed - str . Secret seed to send money
 # remember, that server and client should be in one local network
 #information about Eisenkoch:
 # address - str. Public address of robot
 # cost - int. Price of one portion of waffles
+#robonomics interface to send tokens:
+# seed - str . Secret seed to send money
 
-server:
+tcp_server:
   address: ""
   port:
-  seed: ""
 eisenkoch:
   address: ""
   cost:
+robonomics:
+  seed: ""

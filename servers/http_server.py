@@ -50,11 +50,11 @@ class MyHttpsServer(Thread):
 
         @self.app.get("/status-left", response_class=JSONResponse)
         async def status_left() -> Dict[str, str]:
-            return {"status": self.status_left, "baking-duration": self.cooking_time_left}
+            return {"status": self.status_left, "baking_duration": self.cooking_time_left}
 
         @self.app.get("/status-right", response_class=JSONResponse)
         async def status_right() -> Dict[str, str]:
-            return {"status": self.status_right, "baking-duration": self.cooking_time_right}
+            return {"status": self.status_right, "baking_duration": self.cooking_time_right}
 
         @self.app.get("/update-balance", response_class=JSONResponse)
         async def update_balance() -> Dict[str, int]:
