@@ -1,0 +1,3 @@
+[submodule "eisenkoch-frontend"]
+	path = eisenkoch-frontend
+	url = https://github.com/IvanGlebov/eisenkoch-frontend.git

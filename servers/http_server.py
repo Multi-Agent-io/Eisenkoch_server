@@ -6,9 +6,11 @@ from typing import Dict, Optional, Union
 
 # fast api imports
 import uvicorn as uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 
 
 class MyHttpsServer(Thread):
@@ -37,9 +39,16 @@ class MyHttpsServer(Thread):
             allow_headers=["*"],
         )
 
-        @self.app.get("/")
-        async def root() -> Dict[str, str]:
-            return {"message": "Hello World"}
+        self.app.mount("/dist", StaticFiles(directory="dist"), name="dist")
+        self.app.mount("/css", StaticFiles(directory="dist/css"), name="css")
+        self.app.mount("/js", StaticFiles(directory="dist/js"), name="js")
+        self.app.mount("/img", StaticFiles(directory="dist/img"), name="img")
+
+        self.templates = Jinja2Templates(directory="dist")
+
+        @self.app.get("/", response_class=HTMLResponse)
+        async def root(request: Request) -> Dict[str, str]:
+            return self.templates.TemplateResponse("index.html", {"request": request})
 
         @self.app.get("/total-waffles", response_class=JSONResponse)
         def waffles_numbers() -> Dict[str, str]:
@@ -66,6 +75,9 @@ class MyHttpsServer(Thread):
     def set_number_waffles(self, number: int) -> None:
         self.number_of_waffles = number
 
+    def get_number_waffles(self) -> int:
+        return self.number_of_waffles
+
     def set_right_cooking_time(self, time: int) -> None:
         self.cooking_time_right = time
 
@@ -83,4 +95,4 @@ class MyHttpsServer(Thread):
 
 
 if __name__ == "__main__":
-    MyHttpsServer("4F3b1hoyFW1N4V9H7ggUq23MjXyK8C62s5v6469k9qEBktDf").start()
+    MyHttpsServer("4CFXBSbwrdjAsAXtQ8Ck9Uiq8qSeKkjNjtnXjnUKJSAhDpcM").start()

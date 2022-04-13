@@ -11,7 +11,7 @@ To start the program you should install docker. Link how to download and install
 
 First you need to download repository:
 ```shell
-git clone https://github.com/Multi-Agent-io/Eisenkoch_server.git
+git clone --recurse-submodules https://github.com/Multi-Agent-io/Eisenkoch_server.git
 ```
 Go into the repository to ***config*** subdirectory and rename and fill in config file:
 ```shell

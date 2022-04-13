@@ -34,7 +34,8 @@ class MainClass:
         self.http = MyHttpsServer(self.config["eisenkoch"]["address"])
         self.http.start()
         account_data = self.interface.account_info(self.config["eisenkoch"]["address"])
-        eisenkoch_balance = account_data["data"]["free"] - account_data["data"]["feeFrozen"]
+        logging.debug(account_data)
+        eisenkoch_balance = round((account_data["data"]["free"] - account_data["data"]["fee_frozen"]) * 10**(-9), 3)
         self.http.set_update_balance(eisenkoch_balance)
 
     def __get_data(self, block: bool = False) -> tp.Optional[str]:
@@ -91,9 +92,11 @@ class MainClass:
                                                             int(self.config["eisenkoch"]["cost"]))
                         logging.info(result)
                         account_data = self.interface.account_info(self.config["eisenkoch"]["address"])
-                        new_balance = account_data["data"]["free"] - account_data["data"]["feeFrozen"]
+                        new_balance = round(
+                            (account_data["data"]["free"] - account_data["data"]["fee_frozen"]) * 10**(-9), 3)
                         self.http.set_update_balance(new_balance)
                         logging.info("update balance")
+                        self.http.set_number_waffles(self.http.get_number_waffles() + 1)
 
                     if self.current_command == "left_timer_start":
                         logging.info(f"get command {self.current_command}")
