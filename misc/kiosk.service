@@ -1,0 +1,20 @@
+[Unit]
+Description=Mozilla start kiosk mode
+
+After=network.target
+
+[Service]
+Type=simple
+Restert=on-failure
+RestartSec=10
+
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/rpi/.Xauthority
+
+User=rpi
+
+ExecStartPre=/bin/sleep 30
+ExecStart = /bin/bash -c 'firefox --kiosk 127.0.0.1:5000'
+
+[Install]
+WantedBy=multi-user.target
