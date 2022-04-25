@@ -1,2 +1,6 @@
-importlib-resources
-PyYAML
+importlib-resources==5.4.0
+PyYAML==6.0
+uvicorn==0.17.6
+fastapi==0.75.0
+jinja2~=3.1
+robonomics-interface~=0.9.0
