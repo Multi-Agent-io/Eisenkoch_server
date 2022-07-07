@@ -23,7 +23,7 @@ class MainClass:
         self.config: tp.Dict[str, str] = read_config()
         logging.debug(self.config)
 
-        self.interface = RI.RobonomicsInterface(self.config["robonomics"]["seed"])
+        self.interface = RI.RobonomicsInterface(seed=self.config["robonomics"]["seed"])
         self.current_command: tp.Optional[str] = None
 
         # starting servers
