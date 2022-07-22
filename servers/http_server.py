@@ -43,6 +43,7 @@ class MyHttpsServer(Thread):
         self.app.mount("/css", StaticFiles(directory="dist/css"), name="css")
         self.app.mount("/js", StaticFiles(directory="dist/js"), name="js")
         self.app.mount("/img", StaticFiles(directory="dist/img"), name="img")
+        self.app.mount("/media", StaticFiles(directory="dist/media"), name="media")
 
         self.templates = Jinja2Templates(directory="dist")
 

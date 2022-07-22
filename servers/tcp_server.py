@@ -68,14 +68,7 @@ class TCPServer(Thread):
                         self.command = self.__readline(cur_socket)
                         if len(self.command) != 0:
                             logging.debug(self.command + "\n")
-
-                            # part only for simulation -- NEED TO DELETE
-                            if self.command == "GET main":
-                                cur_socket.send("main 1".encode())
-                                logging.info("start robot command - main 1")
-
-                            else:
-                                ROBOT_COMMAND_QUEUE.put_nowait(self.command)
+                            ROBOT_COMMAND_QUEUE.put_nowait(self.command)
 
                 # Handle "exceptional conditions"
                 for cur_except_socket in self.exceptional:
